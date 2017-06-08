@@ -26,7 +26,7 @@ namespace scots{
  **/
 class StaticController {
 /* allow the write_to_file function to access the private members */
-friend bool write_to_file(const StaticController&, const std::string&);
+friend bool write_to_file(const StaticController&, const std::string&,bool);
 private:
   UniformGrid m_input_grid;
   UniformGrid m_state_grid;

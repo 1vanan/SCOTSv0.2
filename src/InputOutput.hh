@@ -83,9 +83,17 @@ bool write_to_file(const WinningDomain& wd, const std::string& filename, bool ap
 
 /** @brief write StaticController to a file via a FileWriter **/
 inline
-bool write_to_file(const StaticController& sc, const std::string& filename) {
+bool write_to_file(const StaticController& sc, const std::string& filename, bool append_to_file = false) {
     FileWriter writer(filename);
-    if(writer.create()) {
+    if(append_to_file) {
+        if(!writer.open()) {
+            return false;
+        }
+    } else {
+        if(!writer.create()) {
+            return false;
+        }
+    }
         writer.add_VERSION();
         writer.add_TYPE(SCOTS_SC_TYPE);
 
@@ -109,8 +117,6 @@ bool write_to_file(const StaticController& sc, const std::string& filename) {
 
         /* write WinningDomain */
         return write_to_file(sc.m_winning_domain,filename,true);
-    }
-    return false;
 }
 
 /** @brief write TransitionFunction to a file via a FileWriter **/
@@ -140,9 +146,9 @@ bool write_to_file(const TransitionFunction& tf, const std::string& filename) {
 
 /** @brief write UniformGrid to a file via a FileWriter **/
 inline
-bool write_to_file(const UniformGrid& grid, const std::string& filename, bool add = false) {
+bool write_to_file(const UniformGrid& grid, const std::string& filename, bool append_to_file = false) {
     FileWriter writer(filename);
-    if(add){
+    if(append_to_file){
         if(!writer.open()){
             return false;
         }
