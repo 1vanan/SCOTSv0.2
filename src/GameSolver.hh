@@ -30,7 +30,7 @@ namespace scots {
 /* default parameters for the solve_reachability_game */
 namespace params {
   auto avoid = [](const abs_type&) noexcept {return false;};
-  std::vector<double> value {};
+  static std::vector<double> value {};
 }
 /** @endcond **/
 
@@ -121,6 +121,12 @@ WinningDomain solve_reachability_game(const TransitionFunction& trans_function,
       }  /* end loop over all pres of state i under input j */
     }  /* end loop over all input j */
   }  /* fifo is empty */
+
+  /* if the default value function was used, free the memory of the static object*/
+  if(value == scots::params::value){
+      value.clear();
+      value.shrink_to_fit();
+  }
 
   return WinningDomain(N,M,std::move(win_domain),std::vector<bool>{},loosing);
 }
