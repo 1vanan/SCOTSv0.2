@@ -60,89 +60,96 @@ namespace scots {
 /** @brief write WinningDomain to a file via a FileWriter **/
 inline
 bool write_to_file(const WinningDomain& wd, const std::string& filename, bool append_to_file=false ) {
-  FileWriter writer(filename);
-  if(append_to_file) {
-    if(!writer.open()) {
-      return false;
-     }
-  } else {
-    if(!writer.create()) {
-      return false;
-     }
-  }
-  writer.add_TYPE(SCOTS_WD_TYPE);
-  writer.add_TEXT("i (state) j_0 ... j_n (valid inputs)");
-  writer.add_WINNINGDOMAIN(SCOTS_WD_DATA,
-                           wd.m_winning_domain,
-                           wd.m_inputs,
-                           wd.m_no_states,
-                           wd.m_no_inputs);
-  writer.close();
-  return true;
+    FileWriter writer(filename);
+    if(append_to_file) {
+        if(!writer.open()) {
+            return false;
+        }
+    } else {
+        if(!writer.create()) {
+            return false;
+        }
+    }
+    writer.add_TYPE(SCOTS_WD_TYPE);
+    writer.add_TEXT("i (state) j_0 ... j_n (valid inputs)");
+    writer.add_WINNINGDOMAIN(SCOTS_WD_DATA,
+                             wd.m_winning_domain,
+                             wd.m_inputs,
+                             wd.m_no_states,
+                             wd.m_no_inputs);
+    writer.close();
+    return true;
 }
 
 /** @brief write StaticController to a file via a FileWriter **/
 inline
 bool write_to_file(const StaticController& sc, const std::string& filename) {
-  FileWriter writer(filename);
-  if(writer.create()) {
-    writer.add_VERSION();
-    writer.add_TYPE(SCOTS_SC_TYPE);
+    FileWriter writer(filename);
+    if(writer.create()) {
+        writer.add_VERSION();
+        writer.add_TYPE(SCOTS_SC_TYPE);
 
-    /* write UniformGrid information of the state space */
-    writer.add_TEXT("STATE_SPACE");
-    writer.add_TYPE(SCOTS_UG_TYPE);
-    writer.add_MEMBER(SCOTS_UG_DIM,sc.m_state_grid.get_dim());
-    writer.add_VECTOR(SCOTS_UG_ETA,sc.m_state_grid.get_eta());
-    writer.add_VECTOR(SCOTS_UG_LOWER_LEFT,sc.m_state_grid.get_lower_left());
-    writer.add_VECTOR(SCOTS_UG_UPPER_RIGHT,sc.m_state_grid.get_upper_right());
+        /* write UniformGrid information of the state space */
+        writer.add_TEXT("STATE_SPACE");
+        writer.add_TYPE(SCOTS_UG_TYPE);
+        writer.add_MEMBER(SCOTS_UG_DIM,sc.m_state_grid.get_dim());
+        writer.add_VECTOR(SCOTS_UG_ETA,sc.m_state_grid.get_eta());
+        writer.add_VECTOR(SCOTS_UG_LOWER_LEFT,sc.m_state_grid.get_lower_left());
+        writer.add_VECTOR(SCOTS_UG_UPPER_RIGHT,sc.m_state_grid.get_upper_right());
 
-    /* write UniformGrid information of the input space */
-    writer.add_TEXT("INPUT_SPACE");
-    writer.add_TYPE(SCOTS_UG_TYPE);
-    writer.add_MEMBER(SCOTS_UG_DIM,sc.m_input_grid.get_dim());
-    writer.add_VECTOR(SCOTS_UG_ETA,sc.m_input_grid.get_eta());
-    writer.add_VECTOR(SCOTS_UG_LOWER_LEFT,sc.m_input_grid.get_lower_left());
-    writer.add_VECTOR(SCOTS_UG_UPPER_RIGHT,sc.m_input_grid.get_upper_right());
+        /* write UniformGrid information of the input space */
+        writer.add_TEXT("INPUT_SPACE");
+        writer.add_TYPE(SCOTS_UG_TYPE);
+        writer.add_MEMBER(SCOTS_UG_DIM,sc.m_input_grid.get_dim());
+        writer.add_VECTOR(SCOTS_UG_ETA,sc.m_input_grid.get_eta());
+        writer.add_VECTOR(SCOTS_UG_LOWER_LEFT,sc.m_input_grid.get_lower_left());
+        writer.add_VECTOR(SCOTS_UG_UPPER_RIGHT,sc.m_input_grid.get_upper_right());
 
-    writer.close();
+        writer.close();
 
-    /* write WinningDomain */
-    return write_to_file(sc.m_winning_domain,filename,true);
-  }
-  return false;
+        /* write WinningDomain */
+        return write_to_file(sc.m_winning_domain,filename,true);
+    }
+    return false;
 }
 
 /** @brief write TransitionFunction to a file via a FileWriter **/
 inline
 bool write_to_file(const TransitionFunction& tf, const std::string& filename) {
-  FileWriter writer(filename);
-  if(writer.create()) {
-    abs_type N=tf.m_no_states;
-    abs_type M=tf.m_no_inputs;
-    abs_type T=tf.m_no_transitions;
+    FileWriter writer(filename);
+    if(writer.create()) {
+        abs_type N=tf.m_no_states;
+        abs_type M=tf.m_no_inputs;
+        abs_type T=tf.m_no_transitions;
 
-    writer.add_VERSION();
-    writer.add_TYPE(SCOTS_TF_TYPE);
-    writer.add_MEMBER(SCOTS_TF_NO_STATES,N);
-    writer.add_MEMBER(SCOTS_TF_NO_INPUTS,M);
-    writer.add_MEMBER(SCOTS_TF_NO_TRANS,T);
-    writer.add_ARRAY(SCOTS_TF_NO_PRE,tf.m_no_pre,N*M);
-    writer.add_ARRAY(SCOTS_TF_NO_POST,tf.m_no_post,N*M);
-    writer.add_ARRAY(SCOTS_TF_PRE_PTR,tf.m_pre_ptr,N*M);
-    writer.add_ARRAY(SCOTS_TF_PRE,tf.m_pre,T);
+        writer.add_VERSION();
+        writer.add_TYPE(SCOTS_TF_TYPE);
+        writer.add_MEMBER(SCOTS_TF_NO_STATES,N);
+        writer.add_MEMBER(SCOTS_TF_NO_INPUTS,M);
+        writer.add_MEMBER(SCOTS_TF_NO_TRANS,T);
+        writer.add_ARRAY(SCOTS_TF_NO_PRE,tf.m_no_pre,N*M);
+        writer.add_ARRAY(SCOTS_TF_NO_POST,tf.m_no_post,N*M);
+        writer.add_ARRAY(SCOTS_TF_PRE_PTR,tf.m_pre_ptr,N*M);
+        writer.add_ARRAY(SCOTS_TF_PRE,tf.m_pre,T);
 
-    writer.close();
-    return true;
-  }
-  return false;
+        writer.close();
+        return true;
+    }
+    return false;
 }
 
 /** @brief write UniformGrid to a file via a FileWriter **/
 inline
-bool write_to_file(const UniformGrid& grid, const std::string& filename) {
-  FileWriter writer(filename);
-  if(writer.create()) {
+bool write_to_file(const UniformGrid& grid, const std::string& filename, bool add = false) {
+    FileWriter writer(filename);
+    if(add){
+        if(!writer.open()){
+            return false;
+        }
+    }
+    else if(!writer.create()){
+        return false;
+    }
 
     writer.add_VERSION();
     writer.add_TYPE(SCOTS_UG_TYPE);
@@ -153,62 +160,60 @@ bool write_to_file(const UniformGrid& grid, const std::string& filename) {
 
     writer.close();
     return true;
-  }
-  return false;
 }
 
 
 /** @brief write atomic propositions to file **/
 template<class F>
 bool write_to_file(const UniformGrid& grid, const F& atomic_prop, const std::string& filename) {
-  FileWriter writer(filename);
+    FileWriter writer(filename);
 
-  /* store grid information */
-  if(!write_to_file(grid,filename)) {
-    return false;
-  }
-  std::vector<abs_type> gp {};
-  for(abs_type i=0; i<grid.size(); i++) {
-    if(atomic_prop(i)) {
-      gp.push_back(i);
+    /* store grid information */
+    if(!write_to_file(grid,filename)) {
+        return false;
     }
-  }
-  if(!writer.open()) {
-    return false;
-  }
-  if(!writer.add_TYPE(SCOTS_GP_TYPE)) {
-    return false;
-  }
-  if(!writer.add_VECTOR(SCOTS_GP_DATA,gp)) {
-    return false;
-  }
-  writer.close();
-  return true;
+    std::vector<abs_type> gp {};
+    for(abs_type i=0; i<grid.size(); i++) {
+        if(atomic_prop(i)) {
+            gp.push_back(i);
+        }
+    }
+    if(!writer.open()) {
+        return false;
+    }
+    if(!writer.add_TYPE(SCOTS_GP_TYPE)) {
+        return false;
+    }
+    if(!writer.add_VECTOR(SCOTS_GP_DATA,gp)) {
+        return false;
+    }
+    writer.close();
+    return true;
 }
 
 #ifdef SCOTS_BDD
 /** @brief write SymbolicSet to file **/
 inline
 bool write_to_file(const SymbolicSet& set, const std::string& filename) {
-  FileWriter writer(filename);
-  if(writer.create()) {
+    FileWriter writer(filename);
+    if(writer.create()) {
 
-    writer.add_VERSION();
-    writer.add_TYPE(SCOTS_SS_TYPE);
-    writer.add_MEMBER(SCOTS_UG_DIM,set.get_dim());
-    writer.add_VECTOR(SCOTS_UG_ETA,set.get_eta());
-    writer.add_VECTOR(SCOTS_UG_LOWER_LEFT,set.get_lower_left());
-    writer.add_VECTOR(SCOTS_UG_UPPER_RIGHT,set.get_upper_right());
-    auto intervals = set.get_bdd_intervals();
-    for(int i=0;i<set.get_dim(); i++) {
-      std::string s = SCOTS_SS_BDD_VAR_ID;
-      writer.add_VECTOR(s.append(std::to_string(i+1)),intervals[i].get_bdd_var_ids());
+        writer.add_VERSION();
+        writer.add_TYPE(SCOTS_SS_TYPE);
+        writer.add_MEMBER(SCOTS_UG_DIM,set.get_dim());
+        writer.add_VECTOR(SCOTS_UG_ETA,set.get_eta());
+        writer.add_VECTOR(SCOTS_UG_LOWER_LEFT,set.get_lower_left());
+        writer.add_VECTOR(SCOTS_UG_UPPER_RIGHT,set.get_upper_right());
+        auto intervals = set.get_bdd_intervals();
+        for(int i=0;i<set.get_dim(); i++) {
+            std::string s = SCOTS_SS_BDD_VAR_ID;
+            writer.add_VECTOR(s.append(std::to_string(i+1)),intervals[i].get_bdd_var_ids());
+        }
+
+        writer.close();
+        return true;
     }
-
-    writer.close();
-    return true;
-  }
-  return false;
+    return false;
 }
 
 /** 
@@ -219,14 +224,14 @@ bool write_to_file(const SymbolicSet& set, const std::string& filename) {
  **/
 inline
 bool write_to_file(const Cudd& manager, const SymbolicSet& set, const BDD& bdd, const std::string& filename, char mode='B') {
-  FileWriter writer(filename);
-  if(!write_to_file(set,filename)) {
-    return false;
-  }
-  if(!writer.add_BDD(manager, bdd,mode)) {
-    return false;
-  }
-  return true;
+    FileWriter writer(filename);
+    if(!write_to_file(set,filename)) {
+        return false;
+    }
+    if(!writer.add_BDD(manager, bdd,mode)) {
+        return false;
+    }
+    return true;
 }
 #endif
 
@@ -234,190 +239,190 @@ bool write_to_file(const Cudd& manager, const SymbolicSet& set, const BDD& bdd, 
 /** @brief read WinningDomain from a file via a FileReader **/
 inline
 bool read_from_file(WinningDomain& wd, const std::string& filename, size_t offset=0) {
-  FileReader reader(filename);
-  if(!reader.open()) {
-    return false;
-  }
-  abs_type N;
-  abs_type M;
-  std::vector<bool> inputs{};
-  std::vector<abs_type> domain{};
-  if(!reader.get_WINNINGDOMAIN(SCOTS_WD_DATA,domain,inputs,N,M,offset)) {
-    return false;
-  } 
-  wd = WinningDomain(N,M,std::move(domain),std::move(inputs),std::numeric_limits<abs_type>::max());
-  return true;
+    FileReader reader(filename);
+    if(!reader.open()) {
+        return false;
+    }
+    abs_type N;
+    abs_type M;
+    std::vector<bool> inputs{};
+    std::vector<abs_type> domain{};
+    if(!reader.get_WINNINGDOMAIN(SCOTS_WD_DATA,domain,inputs,N,M,offset)) {
+        return false;
+    }
+    wd = WinningDomain(N,M,std::move(domain),std::move(inputs),std::numeric_limits<abs_type>::max());
+    return true;
 }
 
 /** @brief read UniformGrid from a file via a FileReader **/
 inline
 bool read_from_file(UniformGrid& grid, const std::string& filename, size_t offset = 0) {
-  FileReader reader(filename);
-  if(!reader.open()) {
-    return false;
-  }
-  int dim;
-  if(!reader.get_MEMBER(SCOTS_UG_DIM,dim,offset)) {
-    return false;
-  } 
-  std::vector<double> eta;
-  if(!reader.get_VECTOR(SCOTS_UG_ETA,eta,offset)) {
-    return false;
-  }
-  std::vector<double> lb;
-  if(!reader.get_VECTOR(SCOTS_UG_LOWER_LEFT,lb,offset)) {
-    return false;
-  }
-  std::vector<double> ub;
-  if(!reader.get_VECTOR(SCOTS_UG_UPPER_RIGHT,ub,offset)) {
-    return false;
-  }
-  reader.close();
-  /* make sure that rounding in the UniformGrid constructor works correctly */
-  for(int i=0; i<dim; i++) {
-    lb[i]-=eta[i]/4.0;
-    ub[i]+=eta[i]/4.0;
-  }
-  grid = UniformGrid(dim,lb,ub,eta);
-  return true;
+    FileReader reader(filename);
+    if(!reader.open()) {
+        return false;
+    }
+    int dim;
+    if(!reader.get_MEMBER(SCOTS_UG_DIM,dim,offset)) {
+        return false;
+    }
+    std::vector<double> eta;
+    if(!reader.get_VECTOR(SCOTS_UG_ETA,eta,offset)) {
+        return false;
+    }
+    std::vector<double> lb;
+    if(!reader.get_VECTOR(SCOTS_UG_LOWER_LEFT,lb,offset)) {
+        return false;
+    }
+    std::vector<double> ub;
+    if(!reader.get_VECTOR(SCOTS_UG_UPPER_RIGHT,ub,offset)) {
+        return false;
+    }
+    reader.close();
+    /* make sure that rounding in the UniformGrid constructor works correctly */
+    for(int i=0; i<dim; i++) {
+        lb[i]-=eta[i]/4.0;
+        ub[i]+=eta[i]/4.0;
+    }
+    grid = UniformGrid(dim,lb,ub,eta);
+    return true;
 }
 
 /** @brief read StaticController from a file via a FileReader **/
 inline
 bool read_from_file(StaticController& sc, const std::string& filename) {
-  FileReader reader(filename);
-  if(!reader.open()) {
-    return false;
-  }
-  /* find offset where the UniformGrid of the state space is stored */
-  size_t ss_offset=reader.find_TEXTPOS("STATE_SPACE");
-  size_t is_offset=reader.find_TEXTPOS("INPUT_SPACE");
-  if(!ss_offset || !is_offset) {
-    return false;
-  }
-  reader.close();
-  /* read UniformGrid info */
-  UniformGrid ss;
-  if(!read_from_file(ss,filename,ss_offset)) {
-    return false;
-  }
-  /* read UniformGrid info */
-  UniformGrid is;
-  if(!read_from_file(is,filename,is_offset)) {
-    return false;
-  }
-  /* read WinningDomain  info */
-  WinningDomain wd;
-  if(!read_from_file(wd,filename)) {
-    return false;
-  }
-  sc = StaticController(ss,is,std::move(wd));
-  return true;
+    FileReader reader(filename);
+    if(!reader.open()) {
+        return false;
+    }
+    /* find offset where the UniformGrid of the state space is stored */
+    size_t ss_offset=reader.find_TEXTPOS("STATE_SPACE");
+    size_t is_offset=reader.find_TEXTPOS("INPUT_SPACE");
+    if(!ss_offset || !is_offset) {
+        return false;
+    }
+    reader.close();
+    /* read UniformGrid info */
+    UniformGrid ss;
+    if(!read_from_file(ss,filename,ss_offset)) {
+        return false;
+    }
+    /* read UniformGrid info */
+    UniformGrid is;
+    if(!read_from_file(is,filename,is_offset)) {
+        return false;
+    }
+    /* read WinningDomain  info */
+    WinningDomain wd;
+    if(!read_from_file(wd,filename)) {
+        return false;
+    }
+    sc = StaticController(ss,is,std::move(wd));
+    return true;
 }
 
 /** @brief read TransitionFunction from a file via a FileReader **/
 inline
 bool read_from_file(TransitionFunction& tf, const std::string& filename) {
-  FileReader reader(filename);
-  if(!reader.open()) {
-    return false;
-  }
-  std::string type;
-  if(!reader.get_TYPE(type)) {
-    return false;
-  } 
-  if(type!=SCOTS_TF_TYPE) {
-    return false;
-  }
-  abs_type N;
-  if(!reader.get_MEMBER(SCOTS_TF_NO_STATES,N)) {
-    return false;
-  } 
-  abs_type M;   
-  if(!reader.get_MEMBER(SCOTS_TF_NO_INPUTS,M)) {
-    return false;
-  } 
-  abs_ptr_type T; 
-  if(!reader.get_MEMBER(SCOTS_TF_NO_TRANS,T)) {
-    return false;
-  } 
-  tf.init_infrastructure(N,M);
-  tf.init_transitions(T);
-  size_t offset;
-  offset=reader.get_ARRAY(SCOTS_TF_NO_PRE,tf.m_no_pre,N*M);
-      std::cout << "off " <<offset << "\n";
-  if(!offset) {
-    tf.clear();
-    return false;
-  }
-  offset=reader.get_ARRAY(SCOTS_TF_NO_POST,tf.m_no_post,N*M,offset);
-      std::cout << "off " <<offset << "\n";
-  if(!offset) {
-    tf.clear();
-    return false;
-  }
-  offset=reader.get_ARRAY(SCOTS_TF_PRE_PTR,tf.m_pre_ptr,N*M,offset);
-      std::cout << "off " <<offset << "\n";
-  if(!offset) {
-    tf.clear();
-    return false;
-  }
-  offset=reader.get_ARRAY(SCOTS_TF_PRE,tf.m_pre,T,offset);
-      std::cout << "off " <<offset << "\n";
-  if(!offset) {
-    tf.clear();
-    return false;
-  }
-  reader.close();
-  return true;
+    FileReader reader(filename);
+    if(!reader.open()) {
+        return false;
+    }
+    std::string type;
+    if(!reader.get_TYPE(type)) {
+        return false;
+    }
+    if(type!=SCOTS_TF_TYPE) {
+        return false;
+    }
+    abs_type N;
+    if(!reader.get_MEMBER(SCOTS_TF_NO_STATES,N)) {
+        return false;
+    }
+    abs_type M;
+    if(!reader.get_MEMBER(SCOTS_TF_NO_INPUTS,M)) {
+        return false;
+    }
+    abs_ptr_type T;
+    if(!reader.get_MEMBER(SCOTS_TF_NO_TRANS,T)) {
+        return false;
+    }
+    tf.init_infrastructure(N,M);
+    tf.init_transitions(T);
+    size_t offset;
+    offset=reader.get_ARRAY(SCOTS_TF_NO_PRE,tf.m_no_pre,N*M);
+    std::cout << "off " <<offset << "\n";
+    if(!offset) {
+        tf.clear();
+        return false;
+    }
+    offset=reader.get_ARRAY(SCOTS_TF_NO_POST,tf.m_no_post,N*M,offset);
+    std::cout << "off " <<offset << "\n";
+    if(!offset) {
+        tf.clear();
+        return false;
+    }
+    offset=reader.get_ARRAY(SCOTS_TF_PRE_PTR,tf.m_pre_ptr,N*M,offset);
+    std::cout << "off " <<offset << "\n";
+    if(!offset) {
+        tf.clear();
+        return false;
+    }
+    offset=reader.get_ARRAY(SCOTS_TF_PRE,tf.m_pre,T,offset);
+    std::cout << "off " <<offset << "\n";
+    if(!offset) {
+        tf.clear();
+        return false;
+    }
+    reader.close();
+    return true;
 }
 
 #ifdef SCOTS_BDD
 /** @brief write SymbolicSet to file **/
 inline
 bool read_from_file(const Cudd& manager, SymbolicSet& set, const std::string& filename) {
-  /* read UniformGrid from file */
-  UniformGrid grid;
-  if(!read_from_file(grid,filename)){
-    return false;
-  }
-  /* read the BDD variable IDs and create IntegerInterval*/
-  std::vector<IntegerInterval<abs_type>> bdd_interval{};
-  FileReader reader(filename);
-  if(reader.open()) {
-    size_t offset = 0;
-    for(int i=0;i<grid.get_dim(); i++) {
-      std::vector<unsigned int> var_id {};
-      std::string s = SCOTS_SS_BDD_VAR_ID;
-      offset=reader.get_VECTOR(s.append(std::to_string(i+1)),var_id,offset);
-      if(!offset) 
+    /* read UniformGrid from file */
+    UniformGrid grid;
+    if(!read_from_file(grid,filename)){
         return false;
-      bdd_interval.emplace_back(manager,abs_type{0},grid.get_no_gp_per_dim()[i]-abs_type{1},var_id);
     }
-    reader.close();
-  } else {
-    return false;
-  }
-  /* initialize SymbolicSet  */
-  set = SymbolicSet(grid,bdd_interval);
-  return true;
+    /* read the BDD variable IDs and create IntegerInterval*/
+    std::vector<IntegerInterval<abs_type>> bdd_interval{};
+    FileReader reader(filename);
+    if(reader.open()) {
+        size_t offset = 0;
+        for(int i=0;i<grid.get_dim(); i++) {
+            std::vector<unsigned int> var_id {};
+            std::string s = SCOTS_SS_BDD_VAR_ID;
+            offset=reader.get_VECTOR(s.append(std::to_string(i+1)),var_id,offset);
+            if(!offset)
+                return false;
+            bdd_interval.emplace_back(manager,abs_type{0},grid.get_no_gp_per_dim()[i]-abs_type{1},var_id);
+        }
+        reader.close();
+    } else {
+        return false;
+    }
+    /* initialize SymbolicSet  */
+    set = SymbolicSet(grid,bdd_interval);
+    return true;
 }
 
 /** 
- * @brief read BDD with its SymbolicSet information from file 
+ * @brief read BDD with its SymbolicSet information from file
  * The SymbolicSet is read from filename.scs\n
  * The BDD is read from filename.bdd\n
  * See dddmp.h for the different modes of reading.
  **/
 inline
 bool read_from_file(const Cudd& manager, SymbolicSet& set, BDD& bdd, const std::string& filename, char mode = 'B') {
-  if(!read_from_file(manager,set,filename))
-    return false;
-  FileReader reader(filename);
-  if(!reader.get_BDD(manager,bdd,mode)) {
-    return false;
-  }
-  return true;
+    if(!read_from_file(manager,set,filename))
+        return false;
+    FileReader reader(filename);
+    if(!reader.get_BDD(manager,bdd,mode)) {
+        return false;
+    }
+    return true;
 }
 #endif
 
