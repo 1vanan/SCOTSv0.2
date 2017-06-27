@@ -170,7 +170,7 @@ public:
   }
 #ifdef SCOTS_BDD 
   /* functions are only availabe if BDD support is activated */  
-  bool add_BDD(const Cudd& manager, const BDD& bdd, char mode='B') {
+  bool add_BDD(const Cudd& manager, const BDD& bdd, char** varnames, char mode='B') {
     /* disable reordering (if enabled) */
     Cudd_ReorderingType *method=nullptr;
     if(manager.ReorderingStatus(method))
@@ -181,7 +181,7 @@ public:
     if(!file) 
       return false;
     int store = Dddmp_cuddBddStore(bdd.manager(),NULL,
-                                   bdd.getNode(),NULL,NULL,
+                                   bdd.getNode(),varnames,NULL,
                                    (int)mode,DDDMP_VARIDS,NULL,file);
     if(fclose(file))
       return false;

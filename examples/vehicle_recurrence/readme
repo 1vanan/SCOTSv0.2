@@ -1,5 +1,5 @@
 
-A path planning problem for a vehicle using the bycicle model based on the BDD
+A recurrence problem for a vehicle using the bycicle model based on the BDD
 data structure. It uses a customized computation of the symbolic model to
 account for the 2Pi periodicity of the orientation of the vehicle.
 
@@ -19,11 +19,11 @@ account for the 2Pi periodicity of the orientation of the vehicle.
 
   which produces
 
-  ./controllerT1.scs   // controller files to steer system in T1
-  ./controllerT1.bdd
+  ./controller1.scs   // controller files to steer system in T1
+  ./controller1.bdd
 
-  ./controllerT2.scs   // controller files to steer system in T2
-  ./controllerT2.bdd
+  ./controller2.scs   // controller files to steer system in T2
+  ./controller2.bdd
 
   ./obstacles.scs
   ./obstacles.bdd

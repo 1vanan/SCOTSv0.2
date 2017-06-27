@@ -63,7 +63,7 @@ auto system_post = [](state_type &x, const input_type &u) noexcept {
       xx[1]=(1/xc)*5*ro/(ro+rc)*x[0]-(1/xc)*(1/(ro+rc))*x[1];
     }
 	};
-  scots::runge_kutta_fixed4(rhs,x,u,state_dim,tau,5);
+  scots::runge_kutta_fixed4(rhs,x,u,state_dim,tau);
 };
 /* we integrate the growth bound by 0.5 sec (the result is stored in r)  */
 auto radius_post = [](state_type &r, const state_type&, const input_type &u) noexcept {
@@ -77,7 +77,7 @@ auto radius_post = [](state_type &r, const state_type&, const input_type &u) noe
       rr[1]=5*(1/xc)*ro/(ro+rc)*r[0]-(1/xc)*(1/(ro+rc))*r[1];
     }
 	};
-  scots::runge_kutta_fixed4(rhs,r,u,state_dim,tau,5);
+  scots::runge_kutta_fixed4(rhs,r,u,state_dim,tau);
 };
 
 int main() {

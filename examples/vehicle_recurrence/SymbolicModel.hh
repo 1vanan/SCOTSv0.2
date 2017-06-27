@@ -1,7 +1,7 @@
 /*
  * SymbolicModel.hh
  *
- *  created: Jan 2017
+ *  created: Jun 2017
  *   author: Matthias Rungger
  */
 
@@ -243,8 +243,6 @@ public:
           }
 
         /** end modification **/
-
-
 
         }
         

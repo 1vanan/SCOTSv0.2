@@ -234,10 +234,47 @@ bool write_to_file(const Cudd& manager, const SymbolicSet& set, const BDD& bdd, 
     if(!write_to_file(set,filename)) {
         return false;
     }
-    if(!writer.add_BDD(manager, bdd,mode)) {
+   
+   /* check if we should write slugs variable names */
+   if(set.get_slugs_var_names().size()) {
+    /* create data structure for variable names of the BDD variables */
+    char** varnames = new char*[manager.ReadSize()];
+    for(int i=0; i<manager.ReadSize(); i++) 
+      varnames[i]=nullptr;
+    /* create marker to keep track which variable names are allocated here */
+    std::unique_ptr<bool[]> marker(new bool[manager.ReadSize()]());
+     /* fill varnames with slugs variable names */
+    auto slugs_names = set.get_slugs_var_names();
+    auto bdd_ids = set.get_bdd_var_ids();
+    for(size_t i=0; i<slugs_names.size(); i++) 
+      varnames[bdd_ids[i]]=&slugs_names[i][0];
+    for(int i=0; i<manager.ReadSize(); i++) {
+      if(varnames[i]==nullptr) {
+        varnames[i] = new char;
+        varnames[i][0]='d';
+        marker[i]=true;
+      }
+    }
+
+    /* write BDD to file */
+    if(!writer.add_BDD(manager,bdd,varnames,mode)) {
         return false;
     }
-    return true;
+
+    /* clean variable names */
+    for(int i=0; i<manager.ReadSize(); i++) {
+      if(marker[i])
+        delete varnames[i];
+    }
+    delete[] varnames;
+   } else {
+    /* write BDD to file */
+    if(!writer.add_BDD(manager,bdd,nullptr,mode)) {
+        return false;
+    }
+  }
+
+  return true;
 }
 #endif
 

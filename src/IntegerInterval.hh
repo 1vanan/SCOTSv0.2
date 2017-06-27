@@ -22,7 +22,10 @@ namespace scots {
 
 /** @class IntegerInterval 
  *
- *  @brief A class to represent the integers in a closed integer interval [lb; ub] as BDDs
+ *  @brief A class to represent the integers in a closed integer interval [lb; ub] as BDDs. \n
+ *  The least significant bit is the BDD variable with the highest ID number.\n
+ *  The most significant bit is the BDD variable with the lowest ID number.
+ * 
  **/
 template<class int_type >
 class IntegerInterval {
@@ -148,6 +151,22 @@ public:
     for(const auto& bdd : m_int_to_bdd)
       elements = elements | bdd;
     return elements;
+  }
+
+  /** @brief get a vector with strings for BDD variable names\n as used in slugs for integer intervals 
+   *
+   *  For example, the integer interval variable x:0...4 declared in slugs is encoded by 3 BDD variables
+   *  with names (from LSB to MSB) x@0.0.4, x@1, x@2
+   *  
+   **/
+  std::vector<std::string> get_slugs_var_names() const {
+    auto no_bdd_var=m_bdd_vars.size();
+    std::vector<std::string> var_names(no_bdd_var);
+    var_names[no_bdd_var-1]=std::string{"@0."}+std::to_string(m_lb)+std::string{"."}+std::to_string(m_ub);
+    for(size_t i=0; i<(no_bdd_var-1); i++) {
+      var_names[i]=std::string{"@"}+std::to_string((no_bdd_var-i-1));
+    }
+    return var_names;
   }
 
 }; /* close class def */

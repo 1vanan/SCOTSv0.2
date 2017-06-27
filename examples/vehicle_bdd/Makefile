@@ -28,4 +28,4 @@ simulate:
 	$(CC) $(CXXFLAGS) $(SCOTSINC) $(CUDD) simulate.cc -o simulate
 
 clean:
-	rm vehicle simulate
+	rm vehicle simulate *.scs *.bdd

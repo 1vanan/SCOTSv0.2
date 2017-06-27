@@ -12,6 +12,7 @@
 
 
 #include <vector>
+#include <string>
 #include <iostream>
 #include <sstream>
 #include <numeric>
@@ -35,21 +36,26 @@ class SymbolicSet : public UniformGrid {
 private:
   /* a vector of IntegerIntervals - one for each dimension */
   std::vector<IntegerInterval<abs_type>> m_bdd_interval;
+  /* a vector containing the slugs variable names */
+  std::vector<std::string> m_slugs_var_names;
 public:
   /** @brief construct SymbolicSet with a Cudd manager **/
-  SymbolicSet() : UniformGrid(), m_bdd_interval{} { }
+  SymbolicSet() : UniformGrid(), m_bdd_interval{}, m_slugs_var_names{} { }
 
   /** @brief create a SymbolicSet from other by projecting it onto the dimension in dim **/
   SymbolicSet(const SymbolicSet& other, std::vector<int> dim) :
-              UniformGrid(other,dim), m_bdd_interval{} {
-    for(const auto& i : dim) 
+              UniformGrid(other,dim), m_bdd_interval{}, m_slugs_var_names{} {
+    for(const auto& i : dim) {
       m_bdd_interval.push_back(other.m_bdd_interval[i]);
+      if(other.m_slugs_var_names.size()>static_cast<size_t>(i))
+        m_slugs_var_names.push_back(other.m_slugs_var_names[i]);
+    }
   }
   
   /** @brief create a SymbolicSet and initialize m_bdd_interval with intervals **/
   SymbolicSet(const UniformGrid& grid,
               const std::vector<IntegerInterval<abs_type>>& intervals) :
-              UniformGrid(grid), m_bdd_interval(intervals) { 
+              UniformGrid(grid), m_bdd_interval(intervals), m_slugs_var_names{} { 
   }
 
   /**
@@ -60,14 +66,17 @@ public:
    * @param lb       - lower-left corner of the hyper-interval confining the uniform grid
    * @param ub       - upper-right corner of the hyper-interval confining the uniform grid
    * @param eta      - grid point distances
+   * OPTIONAL
+   * @param names    - vector of size dim with names of integer variables used to interface with slugs
    **/
   template<class grid_point_t>
   SymbolicSet(const Cudd& manager,
               const int dim,
               const grid_point_t& lb,
               const grid_point_t& ub,
-              const grid_point_t& eta) :
-              UniformGrid(dim,lb,ub,eta), m_bdd_interval{} {
+              const grid_point_t& eta,
+              const std::vector<std::string> names = {}) :
+              UniformGrid(dim,lb,ub,eta), m_bdd_interval{}, m_slugs_var_names(names) {
     for(int i=0; i<m_dim; i++) 
       m_bdd_interval.emplace_back(manager,abs_type{0},m_no_grid_points[i]-1);
   }
@@ -77,10 +86,13 @@ public:
    * 
    * @param manager  - BDD variable manager 
    * @param grid     - UnfiormGrid
+   * OPTIONAL
+   * @param names    - vector of size dim with names of integer BDD variables used to interface with slugs
    **/
   SymbolicSet(const Cudd& manager,
-              const UniformGrid& grid) :
-              UniformGrid(grid), m_bdd_interval{} {
+              const UniformGrid& grid,
+              const std::vector<std::string> names = {}) :
+              UniformGrid(grid), m_bdd_interval{}, m_slugs_var_names(names) {
     for(int i=0; i<m_dim; i++) 
       m_bdd_interval.emplace_back(manager,abs_type{0},m_no_grid_points[i]-1);
   }
@@ -104,7 +116,7 @@ public:
       m_first[i]  = set1.m_first[i];
       m_no_grid_points[i]  = set1.m_no_grid_points[i];
       m_bdd_interval.push_back(set1.m_bdd_interval[i]);
-    }
+      }
     for(int j=set1.m_dim, i=0; i<set2.m_dim; i++) {
       m_eta[j+i] = set2.m_eta[i];
       m_first[j+i]  = set2.m_first[i];
@@ -112,6 +124,18 @@ public:
       m_bdd_interval.push_back(set2.m_bdd_interval[i]);
     }
     calc_nn();
+    /* copy slugs names */
+    if(set1.m_slugs_var_names.size() || set2.m_slugs_var_names.size()) {
+      if(set1.m_slugs_var_names.size())
+        m_slugs_var_names=set1.m_slugs_var_names;
+      else
+        m_slugs_var_names.resize(set1.m_dim, std::string{'d'});
+      if(set2.m_slugs_var_names.size())
+        m_slugs_var_names.insert(m_slugs_var_names.end(), set2.m_slugs_var_names.begin(), set2.m_slugs_var_names.end());
+      else
+        m_slugs_var_names.resize(set1.m_dim+set2.m_dim, std::string{'d'});
+    }
+
   }
 
   /** @brief print information about the symbolic set **/
@@ -122,10 +146,23 @@ public:
       std::cout << m_bdd_interval[i].get_no_bdd_vars() << " ";
     }
     if(verbose) {
+      std::vector<int> no_bdd_var{0};
       std::cout << "\n";
       for(int i=0; i<m_dim; i++) {
         std::cout << "Dim " << i+1 << ": ";
         m_bdd_interval[i].print_bdd_IDs();
+        no_bdd_var.push_back(no_bdd_var.back()+m_bdd_interval[i].get_no_bdd_vars());
+      }
+      if(m_slugs_var_names.size()) {
+        auto slugs_names = get_slugs_var_names();
+        std::cout << "Bdd variable names (to interface with slugs)\n";
+        for(int i=0; i<m_dim; i++) {
+          std::cout << "Integer var in dim " << i+1 << ": ";
+          for(int j=no_bdd_var[i]; j<no_bdd_var[i+1]; j++) {
+              std::cout << slugs_names[j] << " ";
+          }
+          std::cout << std::endl;
+        }
       }
     }
     std::cout << "\n";
@@ -445,6 +482,34 @@ public:
   BDD get_cube(const Cudd& manager) const {
     return manager.computeCube(get_bdd_vars());
   }
+
+  /** @brief set bdd variable names (used to interface with slugs) **/
+  void set_slugs_var_names(const std::vector<std::string>& var_names) { 
+    m_slugs_var_names = var_names;
+  }
+
+  /** @brief get bdd variable names (used to interface with slugs) **/
+  std::vector<std::string> get_slugs_var_names() const { 
+    std::vector<std::string> var_names {};
+    if(m_slugs_var_names.size()) {
+      for(size_t i=0; i<m_bdd_interval.size(); i++) {
+        for(const auto& bdd_names : m_bdd_interval[i].get_slugs_var_names()) {
+          if(m_slugs_var_names[i].back()=='\'') {
+            std::string tmp = m_slugs_var_names[i];
+            /* remove prime from name  */
+            tmp.pop_back();
+            var_names.push_back(tmp+bdd_names);
+            /* add prime at the end of name  */
+            var_names.back().push_back('\'');
+          }
+          else 
+            var_names.push_back(m_slugs_var_names[i]+bdd_names);
+        }
+      }
+    } 
+    return var_names;
+  }
+
 }; /* close class def */
 } /* close namespace */
 #endif /* SYMBOLICSET_HH_ */
