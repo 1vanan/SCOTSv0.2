@@ -474,6 +474,24 @@ public:
     return static_cast<abs_type>(bdd.CountMinterm(get_no_bdd_vars()));
   } 
 
+  /** @brief limit the support of the bdd to the variables in the SymbolicSet  **/
+  void clean(const Cudd& manager, BDD &bdd) const {
+    /* find the variables in the support of the BDD but outside the SymbolicSet */
+    auto var_id = get_bdd_var_ids();
+    auto support_id = bdd.SupportIndices();
+    std::vector<BDD> out{}; 
+    for(const auto& id : support_id) {
+        if(std::find(std::begin(var_id), std::end(var_id), id)==std::end(var_id))
+          out.emplace_back(manager.bddVar(id));
+    }
+    /* remove those variables from the bdd */
+    if(out.size()) 
+      bdd = bdd.ExistAbstract(manager.computeCube(out));
+    /* limit the grid points in the grid */
+    for(const auto& interval : m_bdd_interval) 
+      bdd = bdd & interval.get_all_elements();
+  } 
+
   /** @brief get IntegerInterval  **/
   std::vector<IntegerInterval<abs_type>> get_bdd_intervals() const {
     return m_bdd_interval;

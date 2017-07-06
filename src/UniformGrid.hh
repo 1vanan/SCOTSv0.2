@@ -11,6 +11,7 @@
 #ifndef UNIFORMGRID_HH_
 #define UNIFORMGRID_HH_
 
+#include <sstream>
 #include <iostream>
 #include <vector>
 #include <cmath>

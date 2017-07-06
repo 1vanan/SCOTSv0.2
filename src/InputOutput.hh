@@ -421,7 +421,7 @@ bool read_from_file(TransitionFunction& tf, const std::string& filename) {
 }
 
 #ifdef SCOTS_BDD
-/** @brief write SymbolicSet to file **/
+/** @brief read SymbolicSet to file **/
 inline
 bool read_from_file(const Cudd& manager, SymbolicSet& set, const std::string& filename) {
     /* read UniformGrid from file */
@@ -465,6 +465,7 @@ bool read_from_file(const Cudd& manager, SymbolicSet& set, BDD& bdd, const std::
     if(!reader.get_BDD(manager,bdd,mode)) {
         return false;
     }
+    set.clean(manager,bdd);
     return true;
 }
 #endif
