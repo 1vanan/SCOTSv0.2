@@ -1,9 +1,5 @@
 # Welcome to SCOTSv0.2!
 
-> SCOTSv0.2 is currently under development. Although the core
-> algorithms are stable and usable, the user interfaces might change...
-
-
 **SCOTS** is an open source software tool to compute discrete abstractions and symbolic controllers!
 
 Please consult the [manual](https://gitlab.lrz.de/matthias/SCOTSv0.2/raw/master/manual/manual.pdf) for installation instructions,
@@ -30,6 +26,9 @@ Bug reports and feature requests are happily received at <matthias.rungger@tum.d
     Have a look in the readme file for some info and compiler options
   
 ### What's new:
+
+* The sparse branch (contributed by Eric Kim) implements the algorithm described
+  in [Sparsity-Sensitive Finite Abstraction](https://arxiv.org/abs/1704.03951)
 
 * New data structure to store the transition function of symbolic models
    
