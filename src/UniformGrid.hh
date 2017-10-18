@@ -199,7 +199,7 @@ public:
         /* check if number of grid points in dimension index does not exceed max representable by abs_type  */
         if((sign_u*no_u-sign_l*no_l+1) > std::numeric_limits<abs_type>::max()) {
           std::ostringstream os;
-          throw std::runtime_error("\nscots::UniformGrid: number of grid points exceeds maximum value of abs_type (defined in TransitionSystem.hh).");
+          throw std::runtime_error("\nscots::UniformGrid: number of grid points exceeds maximum value of abs_type.");
         }
         m_no_grid_points[index] = sign_u*no_u-sign_l*no_l+1;
         /* first grid point coordinates */

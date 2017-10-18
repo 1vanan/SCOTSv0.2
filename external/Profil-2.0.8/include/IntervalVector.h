@@ -141,9 +141,9 @@ inline VOID MakePermanent (INTERVAL_VECTOR & x) {
   x.IsTemporary = 0; 
 }
 #else
-inline VOID MakeTemporary (INTERVAL_VECTOR & x) { }
+inline VOID MakeTemporary (INTERVAL_VECTOR & ) { }
 
-inline VOID MakePermanent (INTERVAL_VECTOR & x) { }
+inline VOID MakePermanent (INTERVAL_VECTOR & ) { }
 #endif
 
 VOID Clear (INTERVAL_VECTOR &);

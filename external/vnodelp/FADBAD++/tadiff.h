@@ -48,7 +48,7 @@ public:
 	template <typename V> explicit TValues(const V& val):m_n(1){m_val[0]=val;std::fill(m_val+1,m_val+N,Op<U>::myZero());}
 	U& operator[](const unsigned int i) { return m_val[i]; }
 	const U& operator[](const unsigned int i) const { return m_val[i]; }
-	const unsigned int length() const { return m_n; }
+	unsigned int length() const { return m_n; }
 	unsigned int& length() { return m_n; }
 	void reset(){ m_n=0; }
 };
@@ -65,7 +65,7 @@ public:
 	template <typename V> explicit TTypeNameHV(const V& val):m_val(val),m_rc(0){}
 	const U& val(const unsigned int i) const { return m_val[i]; }
 	U& val(const unsigned int i) { return m_val[i]; }
-	const unsigned int length() const { return m_val.length(); }
+	unsigned int length() const { return m_val.length(); }
 	unsigned int& length() { return m_val.length(); }
 	void decRef(TTypeNameHV<U,N>*& pTTypeNameHV) const { if (--m_rc==0) { delete this; pTTypeNameHV=0;} }
 	void incRef() const {++m_rc;}
@@ -96,7 +96,7 @@ private:
 		}
 		const U& val() const { return m_pTTypeNameHV->val(0); }
 		const U& val(const unsigned int i) const { return m_pTTypeNameHV->val(i); }
-		const unsigned int length() const { return m_pTTypeNameHV->length(); }
+		unsigned int length() const { return m_pTTypeNameHV->length(); }
 		unsigned int& length() { return m_pTTypeNameHV->length(); }	
 		U& val(const unsigned int i) { return m_pTTypeNameHV->val(i); }
 
@@ -118,7 +118,7 @@ public:
 	TTypeNameHV<U,N>* getTTypeNameHV() const { return m_sv.getTTypeNameHV(); }
 	void setTTypeNameHV(const TTypeNameHV<U,N>* pTTypeNameHV) { m_sv.setTTypeNameHV(pTTypeNameHV); }
 	const U& val() const { return m_sv.val(); }
-	const unsigned int length() const { return m_sv.length(); }	
+	unsigned int length() const { return m_sv.length(); }	
 	const U& operator[](const unsigned int i) const { return m_sv.val(i); }
 	U& operator[](const unsigned int i) { if (i>=m_sv.length()) m_sv.length()=i+1; return m_sv.val(i);}
 	

@@ -109,9 +109,9 @@ inline VOID MakePermanent (VECTOR & x) {
   x.IsTemporary = 0; 
 }
 #else
-inline VOID MakeTemporary (VECTOR & x) { }
+inline VOID MakeTemporary (VECTOR & ) { }
 
-inline VOID MakePermanent (VECTOR & x) { }
+inline VOID MakePermanent (VECTOR & ) { }
 #endif
 
 VOID Clear (VECTOR &);

@@ -116,9 +116,9 @@ inline VOID MakePermanent (LONGREAL & x) {
   x.isTemporary = 0;
 }
 #else
-inline VOID MakeTemporary (LONGREAL & x) { }
+inline VOID MakeTemporary (LONGREAL & ) { }
 
-inline VOID MakePermanent (LONGREAL & x) { }
+inline VOID MakePermanent (LONGREAL & ) { }
 #endif
 
 inline LREAL Value (CONST LONGREAL & x) { 

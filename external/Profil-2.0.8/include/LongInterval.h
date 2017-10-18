@@ -129,9 +129,9 @@ inline VOID MakePermanent (LONGINTERVAL & x) {
   x.isTemporary = 0; 
 }
 #else
-inline VOID MakeTemporary (LONGINTERVAL & x) { }
+inline VOID MakeTemporary (LONGINTERVAL & ) { }
 
-inline VOID MakePermanent (LONGINTERVAL & x) { }
+inline VOID MakePermanent (LONGINTERVAL & ) { }
 #endif
 
 inline LIREAL Value (CONST LONGINTERVAL & x) { 
