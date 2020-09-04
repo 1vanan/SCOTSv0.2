@@ -111,7 +111,7 @@ namespace scots {
          * @param[in] radius_post - lambda expression of the form
          *                          \verbatim [] (state_type &r, const state_type& x, const input_type &u) -> void  \endverbatim
          *                          radius_post(x,u) provides a numerical approximation of
-         *                          the growth bound for the cell (with center x, radius  r) and input u\n ?!? why cell should grow?
+         *                          the growth bound for the cell (with center x, radius  r) and input u\n
          *                          the result is stored in r
          *
          * @param[in] avoid  - OPTIONALLY provide lambda expression of the form
@@ -200,7 +200,7 @@ namespace scots {
                     m_input_alphabet.itox(j,u);
                     /* integrate system and radius growth bound */
                     /* the result is stored in x and r */
-                    radius_post(r,x,u); // ?!? x - initial point
+                    radius_post(r,x,u);
                     system_post(x,u);
                     /* determine the cells which intersect with the attainable set:
                      * discrete hyper interval of cell indices
