@@ -22,7 +22,7 @@
 struct rusage usage;
 
 /* state space dim */
-const int state_dim=3;
+const int state_dim=2;
 /* input space dim */
 const int input_dim=2;
 /* sampling time */
