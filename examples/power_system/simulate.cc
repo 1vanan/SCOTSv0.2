@@ -29,6 +29,9 @@ using input_type = std::array<double,input_dim>;
 auto power_system_post = [] (state_type &x, const input_type &u) {
     /* the ode describing the aircraft */
     auto rhs =[] (state_type& xx,  const state_type &x, const input_type &u) {
+        // Values are taken for the average inductivity and resistance.
+        double L = 20 * 0.000001; // Henry
+        double R = 1000; // Ohm
         xx[0] = 1/L * (u[0] - (x[0] + x[1])*R);
         xx[1] = 1/L * (u[1] - (x[0] + x[1])*R);
     };
@@ -56,12 +59,12 @@ int main() {
   std::cout << "\nSimulation:\n " << std::endl;
 
   // TODO: is it initial position for the state space?
-  state_type x={{81, -1*M_PI/180, 55}};
+  state_type x={{0, 0}};
   while(1) {
     std::vector<input_type> u = con.get_control<state_type,input_type>(x);
     std::cout << x[0] <<  " "  << x[1] << " " << x[2] << "\n";
     //std::cout << u[0][0] <<  " "  << u[0][1] << "\n";
-    aircraft_post(x,u[0]);
+    power_system_post(x,u[0]);
     if(target(x)) {
       std::cout << "Arrived: " << x[0] <<  " "  << x[1] << " " << x[2] << std::endl;
       break;

@@ -20,7 +20,7 @@ TARGET = power_system simulate
 
 all: $(TARGET)
 
-aircraft: 
+power_system:
 	$(CC) $(CXXFLAGS) $(SCOTSINC) power_system.cc -o power_system
 
 simulate: 

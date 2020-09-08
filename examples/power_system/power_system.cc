@@ -33,14 +33,16 @@ const double tau = 0.25;
 using state_type = std::array<double,state_dim>;
 using input_type = std::array<double,input_dim>;
 
-// Values are taken for the average inductivity and resistance.
-double L = 20 * 0.000001; // Henry
-double R = 1000; // Ohm
+
 
 /* we integrate the power system ode by 0.25 sec (the result is stored in x)  */
 auto power_system_post = [] (state_type &x, const input_type &u) {
-    /* the ode describing the aircraft */
+    /* the ode describing the power system */
     auto rhs =[] (state_type& xx,  const state_type &x, const input_type &u) {
+        // Values are taken for the average inductivity and resistance.
+        double L = 20 * 0.000001; // Henry
+        double R = 1000; // Ohm
+
         xx[0] = 1/L * (u[0] - (x[0] + x[1])*R);
         xx[1] = 1/L * (u[1] - (x[0] + x[1])*R);
     };
@@ -52,24 +54,28 @@ auto power_system_post = [] (state_type &x, const input_type &u) {
 auto radius_post = [] (state_type &r, const state_type &, const input_type &u) {
     /* the ode for the growth bound */
     auto rhs =[] (state_type& rr,  const state_type &r, const input_type &u) {
-        /* lipschitz matrix in this case can be computed manually.
+        // Values are taken for the average inductivity and resistance.
+        double L = 20 * 0.000001; // Henry
+        double R = 1000; // Ohm
+        /* Lipschitz matrix in this case can be computed manually.
          * ||  df_0/dx_0          df_0/dx_1  ||
          * ||  df_1/dx_0          df_1/dx_1  ||
          * */
-        double L[1][1];
-        L[0][0]=R/L;
-        L[0][1]=R/L;
-        L[1][0]=R/L;
-        L[1][1]=R/L;
-        /* to account for input disturbances TODO: why input? disturbance here is for inductivity*/
+        double Lp[2][2];
+        Lp[0][0]=R/L;
+        Lp[0][1]=R/L;
+        Lp[1][0]=R/L;
+        Lp[1][1]=R/L;
+        /* to account for input disturbances */
         const state_type w={{.108,0.002}};
-        rr[0] = L[0][0]*r[0]+L[0][1]*r[1]+w[0];
-        rr[1] = L[1][0]*r[0]+L[1][1]*r[1]+w[1];
+        rr[0] = Lp[0][0]*r[0]+Lp[0][1]*r[1]+w[0];
+        rr[1] = Lp[1][0]*r[0]+Lp[1][1]*r[1]+w[1];
     };
     /* use 10 intermediate steps */
     scots::runge_kutta_fixed4(rhs,r,u,state_dim,tau,5);
 };
 
+// TODO: change disturbance in Latex (linear/non-linear).
 int main() {
     /* to measure time */
     TicToc tt;
@@ -79,7 +85,7 @@ int main() {
     /* grid node distance diameter */
     /* optimized values computed according to doi: 10.1109/CDC.2015.7403185 */
     // TODO: Come up which amount for diameter is better
-    state_type s_eta={{25.0/362,3*M_PI/180/66}};
+    state_type s_eta={{0.01,0.01}};
     /* lower bounds of the hyper rectangle */
     state_type s_lb={{13,13}};
     /* upper bounds of the hyper rectangle */
@@ -96,7 +102,7 @@ int main() {
     input_type i_ub={{242,242}};
     /* grid node distance diameter */
     // TODO: Come up which amount for diameter is better
-    input_type i_eta={{32000,9.0/8.0*M_PI/180}};
+    input_type i_eta={{0.1,0.1}};
     scots::UniformGrid is(input_dim,i_lb,i_ub,i_eta);
     is.print_info();
 
@@ -105,8 +111,8 @@ int main() {
 
     /* setup object to compute the transition function */
     scots::Abstraction<state_type,input_type> abs(ss,is);
-    /* measurement disturbances  */
-    state_type z={{0.2,0.2}};
+    /* Noise of the sensors. Disturbance in the state vars, not in the derivatives. */
+    state_type z={{0,0}};
     abs.set_measurement_error_bound(z);
 
     std::cout << "Computing the transition function: " << std::endl;
@@ -118,29 +124,16 @@ int main() {
     std::cout << "Number of transitions: " << tf.get_no_transitions() << std::endl;
 
     /* define target set */
-    // TODO: why this is different current than in @power_system?
-    auto target = [&s_eta, &z, &ss](const scots::abs_type& abs_state) {
-        state_type t_lb = {{63,-3*M_PI/180,0}};
-        state_type t_ub = {{75,0,2.5}};
-        state_type c_lb;
-        state_type c_ub;
+    auto target = [](const scots::abs_type& abs_state) {
         /* center of cell associated with abs_state is stored in x */
         state_type x;
-        ss.itox(abs_state,x);
-        /* hyper-interval of the quantizer symbol with perturbation */
-        for(int i=0; i<state_dim; i++) {
-            c_lb[i] = x[i]-s_eta[i]/2.0-z[i];
-            c_ub[i] = x[i]+s_eta[i]/2.0+z[i];
-        }
-        if( t_lb[0]<=c_lb[0] && c_ub[0]<=t_ub[0] &&
-            t_lb[1]<=c_lb[1] && c_ub[1]<=t_ub[1] &&
-            t_lb[2]<=c_lb[2] && c_ub[2]<=t_ub[2]) {
-            if(-0.91<=(x[0]*std::sin(x[1])-s_eta[0]/2.0-z[0]-(c_ub[0])*(s_eta[1]/2.0-z[1]))) {
-                return true;
-            }
-        }
-        return false;
+
+        double const MAX_CURRENT = 17.6; //amps
+        double const MIN_CURRENT = 14.4;
+
+        return MIN_CURRENT <= x[0] + x[1] <= MAX_CURRENT;
     };
+
     /* write grid point IDs with uniform grid information to file */
     write_to_file(ss,target,"target");
 
