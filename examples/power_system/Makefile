@@ -3,8 +3,8 @@
 #
 #CC        = g++
 CC       	  = clang++
-CXXFLAGS 		= -g -Wall -Wextra -std=c++11
 CXXFLAGS 		= -Wall -Wextra -std=c++11 -O3 -DNDEBUG
+CXXDEBUG 		= -g -Wall -Wextra -std=c++11
 
 # TODO: check this file
 #
@@ -21,7 +21,9 @@ TARGET = power_system simulate
 all: $(TARGET)
 
 power_system:
-	$(CC) $(CXXFLAGS) $(SCOTSINC) power_system.cc -o power_system
+	#$(CC) $(CXXFLAGS) $(SCOTSINC) power_system.cc -o power_system
+	 $(CC) $(CXXDEBUG) $(SCOTSINC) power_system.cc -o power_system
+
 
 simulate: 
 	$(CC) $(CXXFLAGS) $(SCOTSINC) simulate.cc -o simulate

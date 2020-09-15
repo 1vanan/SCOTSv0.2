@@ -74,7 +74,7 @@ public:
       os << "is out of winning domain: no progress possible.";
       throw std::runtime_error(os.str().c_str());
     }
-    std::vector<input_type> inputs{};
+    std::vector<input_type> inputs = {};
     for(abs_type i=0; i<abs_inputs.size(); i++) {
       input_type u;
       m_input_grid.itox(abs_inputs[i],u);

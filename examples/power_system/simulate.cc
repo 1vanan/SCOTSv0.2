@@ -58,8 +58,7 @@ int main() {
   
   std::cout << "\nSimulation:\n " << std::endl;
 
-  // TODO: is it initial position for the state space?
-  state_type x={{0, 0}};
+  state_type x={{7, 8}};
   while(1) {
     std::vector<input_type> u = con.get_control<state_type,input_type>(x);
     std::cout << x[0] <<  " "  << x[1] << " " << x[2] << "\n";

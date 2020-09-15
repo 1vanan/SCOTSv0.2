@@ -106,7 +106,7 @@ namespace scots {
          *                          \verbatim [] (state_type &x, const input_type &u) ->  void  \endverbatim
          *                          system_post(x,u) provides a numerical approximation of ODE
          *                          solution at time tau with initial state x and input u \n
-         *                          the result is stored in x ~!~ phi
+         *                          the result is stored in x
          *
          * @param[in] radius_post - lambda expression of the form
          *                          \verbatim [] (state_type &r, const state_type& x, const input_type &u) -> void  \endverbatim
