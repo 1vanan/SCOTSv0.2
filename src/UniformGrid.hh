@@ -20,7 +20,6 @@
 #include <climits>
 #include <memory>
 
-//?!? discretization
 /** @namespace scots **/
 namespace scots {
 

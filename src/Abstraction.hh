@@ -198,16 +198,17 @@ namespace scots {
                         r[k]=eta[k]/2.0+m_z[k];
                     /* current input */
                     m_input_alphabet.itox(j,u);
-                    /* integrate system and radius growth bound */
+                    /* integrate system and radius growth bound for provided input and state. */
                     /* the result is stored in x and r */
-                    radius_post(r,x,u);
-                    system_post(x,u);
+                    radius_post(r,x,u); // solution with disturbance TODO: remove it instead of CORA
+                    system_post(x,u); // strict solution
                     /* determine the cells which intersect with the attainable set:
                      * discrete hyper interval of cell indices
                      * [lb[0]; ub[0]] x .... x [lb[dim-1]; ub[dim-1]]
                      * covers attainable set
                      */
                     abs_type npost=1;
+                    /* find bounds for all dimensions. */
                     for(int k=0; k<dim; k++) {
                         /* check for out of bounds */
                         double left = x[k]-r[k]-m_z[k];
@@ -217,6 +218,7 @@ namespace scots {
                             break;
                         }
 
+                        // TODO: put the results from CORA here for each dimension. It should be more bounds as it's not only square anymore
                         /* integer coordinate of lower left corner of post */
                         lb[k] = static_cast<abs_type>((left-lower_left[k]+eta[k]/2.0)/eta[k]);
                         /* integer coordinate of upper right corner of post */
