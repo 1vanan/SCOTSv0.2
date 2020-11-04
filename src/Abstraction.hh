@@ -10,12 +10,14 @@
 #define ABSTRACTION_HH_
 
 #include <iostream>
+#include <fstream>
 #include <cstring>
 #include <memory>
 #include <vector>
 
 #include "UniformGrid.hh"
 #include "TransitionFunction.hh"
+#include "json.hpp"
 
 /** @namespace scots **/
 namespace scots {
@@ -70,6 +72,10 @@ namespace scots {
                 std::cout << "100\n";
         }
     public:
+        /* json path for reading results from cora */
+        std::string cora_path;
+        /* json path for writing comparison results */
+        std::string compare_path;
         /* @cond  EXCLUDE from doxygen*/
         /* deactivate standard constructor */
         Abstraction() = delete;
@@ -98,7 +104,7 @@ namespace scots {
         }
 
         /**
-         * @brief computes the transition function
+         * @brief computes the transition function using linearization
          *
          * @param[out] transition_function - the result of the computation
          *
@@ -119,8 +125,13 @@ namespace scots {
          *                     returns true if the abstract state i is in the avoid
          *                     set; otherwise returns false
          *
+         * @param[in] gb - OPTIONALLY flag is true if the reachable set is computed using the growth bound approach.
+         * Otherwise, data will be read from CORA json in the @cora_path.
+         *
+         * @param[in] compare - OPTIONALLY
+         *
          * The computation proceeds in two loops. In the first loop the cornerIDs are
-         * comuted, which represent the cell IDs that cover the over-approximation of the attainable set:
+         * computed, which represent the cell IDs that cover the over-approximation of the attainable set:
          * \verbatim corner_IDs[i*M+j+0] \endverbatim = lower-left cell ID of the
          * integer hyper-interval of cell IDs that cover the over-approximation of the
          * attainable set of cell with ID=i under input ID=j
@@ -135,7 +146,9 @@ namespace scots {
         void compute_gb(TransitionFunction& transition_function,
                         F1& system_post,
                         F2& radius_post,
-                        F3& avoid=params::avoid_abs) {
+                        F3& avoid=params::avoid_abs,
+                        bool gb=true,
+                        bool compare = false) {
             /* number of cells */
             abs_type N=m_state_alphabet.size();
             /* number of inputs */
@@ -159,9 +172,28 @@ namespace scots {
             /* state and input variables */
             state_type x;
             input_type u;
+            /* state and input variables for logging results in json */
+            state_type state_temp;
+            state_type input_temp;
             /* for out of bounds check */
             state_type lower_left;
             state_type upper_right;
+            /* for storing comparison results with cora */
+            nlohmann::json json_comparison = nlohmann::json::array();
+            std::ofstream myfile;
+            /* for reading data from cora */
+            nlohmann::json::iterator it;
+            nlohmann::json json_cora;
+            /* initialization for reading data from cora or comparison */
+            if((compare && gb) || !gb){
+                std::ifstream ipstr(cora_path);
+                ipstr >> json_cora;
+                it = json_cora.begin();
+                if(compare){
+                    myfile.open(compare_path);
+                }
+            }
+
             /* copy data from m_state_alphabet */
             for(int i=0; i<dim; i++) {
                 eta[i]=m_state_alphabet.get_eta()[i];
@@ -179,7 +211,7 @@ namespace scots {
              * corner_IDs[i*M+j][0] = lower-left cell index of over-approximation of attainable set
              * corner_IDs[i*M+j][1] = upper-right cell index of over-approximation of attainable set
              */
-            /* loop over all cells. ~!~ Try to parallelize this loop */
+            /* loop over all states. TODO: Try to parallelize this loop */
             for(abs_type i=0; i<N; i++) {
                 /* is i an element of the avoid symbols ? */
                 if(avoid(i)) {
@@ -194,41 +226,100 @@ namespace scots {
                     /* get center x of cell */
                     m_state_alphabet.itox(i,x);
                     /* cell radius (including measurement errors) */
-                    for(int k=0; k<dim; k++)
+                    for(int k=0; k<dim; k++) // TODO: put it on the top
                         r[k]=eta[k]/2.0+m_z[k];
                     /* current input */
                     m_input_alphabet.itox(j,u);
-                    /* integrate system and radius growth bound for provided input and state. */
-                    /* the result is stored in x and r */
-                    radius_post(r,x,u); // solution with disturbance TODO: remove it instead of CORA
-                    system_post(x,u); // strict solution
+
                     /* determine the cells which intersect with the attainable set:
                      * discrete hyper interval of cell indices
                      * [lb[0]; ub[0]] x .... x [lb[dim-1]; ub[dim-1]]
                      * covers attainable set
                      */
                     abs_type npost=1;
+
+                    /* integrate system and radius growth bound for provided input and state. */
+                    /* the result is stored in x and r */
+                    if(gb) {
+                        if(compare){
+                            state_temp = x;
+                            input_temp = u;
+                        }
+                        radius_post(r, x, u); // solution with disturbance
+                        system_post(x, u); // nominal solution
+                    }
+
+                    /* initialization for jsons */
+                    auto left_scots = nlohmann::json::array();
+                    auto right_scots = nlohmann::json::array();
+                    auto left_cora = nlohmann::json::array();
+                    auto right_cora = nlohmann::json::array();
+                    auto no_cora = nlohmann::json::array();
+                    auto no_scots = nlohmann::json::array();
+                    /* left and right bounds of interval for each dimension */
+                    double left;
+                    double right;
+                    double lb_cora_k;
+                    double ub_cora_k;
                     /* find bounds for all dimensions. */
-                    for(int k=0; k<dim; k++) {
+                    for (int k = 0; k < dim; k++) { // TODO: re-check that dimension's loop is right
+                        if (gb) {
+                            left = x[k] - r[k] - m_z[k];
+                            right = x[k] + r[k] + m_z[k];
+                        }
+                        if ((compare && gb) || !gb) {
+                            nlohmann::json j1 = *it;
+                            auto cen = j1.at("zonotope").at("value").at("center")[k].get<double>();
+                            auto g = j1.at("zonotope").at("value")["generators"][k][k].get<double>();
+                            ++it;
+
+                            if (compare) {
+                                lb_cora_k = cen - g - m_z[k];
+                                ub_cora_k = cen + g - m_z[k];
+                                left_cora.push_back(lb_cora_k);
+                                right_cora.push_back(ub_cora_k);
+                                left_scots.push_back(left);
+                                right_scots.push_back(right);
+                            } else {
+                                left = cen - g - m_z[k];
+                                right = cen + g + m_z[k];
+                            }
+                        }
+
                         /* check for out of bounds */
-                        double left = x[k]-r[k]-m_z[k];
-                        double right = x[k]+r[k]+m_z[k];
-                        if(left <= lower_left[k]-eta[k]/2.0  || right >= upper_right[k]+eta[k]/2.0)  {
-                            out_of_domain[i*M+j]=true;
+                        if (left <= lower_left[k] - eta[k] / 2.0 || right >= upper_right[k] + eta[k] / 2.0) {
+                            out_of_domain[i * M + j] = true;
+                            std::cout << "out of domain " << '\n';
                             break;
                         }
 
-                        // TODO: put the results from CORA here for each dimension. It should be more bounds as it's not only square anymore
-                        /* integer coordinate of lower left corner of post */
-                        lb[k] = static_cast<abs_type>((left-lower_left[k]+eta[k]/2.0)/eta[k]);
+                        /* update bounds. number of steps
+                         * integer coordinate of lower left corner of post
+                         * */
+                        lb[k] = static_cast<abs_type>((left - lower_left[k] + eta[k] / 2.0) / eta[k]);
                         /* integer coordinate of upper right corner of post */
                         ub[k] = static_cast<abs_type>((right-lower_left[k]+eta[k]/2.0)/eta[k]);
                         /* number of grid points in the post in each dimension */
-                        no[k]=(ub[k]-lb[k]+1);
+                        no[k] = (ub[k] - lb[k] + 1);
+                        if(compare){
+                            no_scots.push_back(no[k]);
+
+                            no_cora.push_back((lb_cora_k- lower_left[k] + eta[k]/2.0)/eta[k]-
+                                              (ub_cora_k-lower_left[k]+eta[k]/2.0)/eta[k] + 1);
+                        }
                         /* total number of post */
-                        npost*=no[k];
-                        cc[k]=0;
+                        npost *= no[k];
+                        cc[k] = 0;
                     }
+                    if (compare) {
+                        nlohmann::json j;
+                        j["zonotope"] = {"input", input_temp, "state", state_temp,
+                                         "scots", {"lb", left_scots, "ub", right_scots, "steps", no_scots},
+                                         "cora", {"lb", left_cora, "ub", right_cora, "steps", no_cora}};
+
+                        json_comparison.push_back(j);
+                    }
+
                     corner_IDs[i*(2*M)+2*j]=0;
                     corner_IDs[i*(2*M)+2*j+1]=0;
                     if(out_of_domain[i*M+j])
@@ -266,6 +357,15 @@ namespace scots {
                 }
                 progress(i,N,counter);
             }
+
+            /* write comparison result with cora to the file */
+            if (compare) {
+                std::ofstream myfile;
+                myfile.open(compare_path);
+                myfile << json_comparison;
+                myfile.close();
+            }
+
             /* compute pre_ptr */
             abs_ptr_type sum=0;
             for(abs_type i=0; i<N; i++) {
@@ -330,6 +430,66 @@ namespace scots {
             }
         }
 
+        /**
+         * @brief computes the transition function
+         *
+         * @param[out] transition_function - the result of the computation
+         * @param[in] path -   provide path to read reachable set that computed using linearization technique
+         *                     from https://ieeexplore.ieee.org/document/6632887. Otherwise, the growth bound approach
+         *                     will be used.
+         *
+         * @param[in] system_post - same as in @compute_gb.
+         *
+         * @param[in] radius_post - same as in @compute_gb.
+         *
+         * @param[in] avoid  - same as in @compute_gb.
+         *
+         * The computation proceeds in two loops as in growth bound approach. The only difference is in the first loop:
+         * overapproximation of the reachable set is computed using linearization approach, not the growth bound.
+         * Reachable set is computed using CORA framework - https://github.com/TUMcps/CORA.
+         *
+         **/
+        template<class F1, class F2, class F3=decltype(params::avoid_abs)>
+        void compute_transitions(TransitionFunction& transition_function,
+                                   std::string path,
+                                   F1& system_post,
+                                   F2& radius_post,
+                                   F3& avoid=params::avoid_abs){
+            cora_path = path;
+            compute_gb(transition_function, system_post, radius_post, params::avoid_abs, false, false);
+        }
+
+        /**
+         * @brief computes the gb and compare results with cora
+         *
+         * @param[out] transition_function - the result of the computation
+         *
+         * @param[in] system_post - same as in @compute_gb.
+         *
+         * @param[in] radius_post - same as in @compute_gb.
+         *
+         * @param[in] avoid  - same as in @compute_gb.
+         * @param[in] path -    provide path to read reachable set that computed using linearization technique
+         *                     from https://ieeexplore.ieee.org/document/6632887. Otherwise, the growth bound approach
+         *                     will be used.
+         *
+         * The computation proceeds in two loops as in growth bound approach. The only difference is in the first loop:
+         * overapproximation of the reachable set is computed using linearization approach, not the growth bound.
+         * Reachable set is computed using CORA framework - https://github.com/TUMcps/CORA.
+         *
+         **/
+        template<class F1, class F2, class F3=decltype(params::avoid_abs)>
+        void compute_compare_gb(TransitionFunction& transition_function,
+                                 std::string path_cora,
+                                 std::string path_compare,
+                                 F1& system_post,
+                                 F2& radius_post,
+                                 F3& avoid=params::avoid_abs){
+            cora_path = path_cora;
+            compare_path = path_compare;
+            compute_gb(transition_function, system_post, radius_post, params::avoid_abs, true, true);
+        }
+
         /** @brief get the center of cells that are used to over-approximated the
          *  attainable set associated with cell (with center x) and input u
          *
@@ -368,6 +528,7 @@ namespace scots {
             }
             state_type xx=x;
             /* compute growth bound and numerical solution of ODE */
+            // TODO: check where this is used
             radius_post(r,x,u);
             system_post(xx,u);
 

@@ -205,7 +205,7 @@ namespace scots {
                     /* first grid point coordinates */
                     m_first[index]= (double)sign_l*(double)no_l*eta[index];
                 }
-                calc_nn();
+                calc_nn(); // TODO: also put it into loop as in abstraction outside of the loop
             } else {
                 throw std::runtime_error("\nscots::UniformGrid: grid dimension has to be greater than zero (using non-default constructor)");
             }
