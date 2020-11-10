@@ -174,7 +174,7 @@ namespace scots {
             input_type u;
             /* state and input variables for logging results in json */
             state_type state_temp;
-            state_type input_temp;
+            input_type input_temp;
             /* for out of bounds check */
             state_type lower_left;
             state_type upper_right;
