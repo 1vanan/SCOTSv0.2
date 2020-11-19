@@ -59,20 +59,32 @@ auto  vehicle_post = [](state_type &x, const input_type &u) {
 
 /* we integrate the growth bound by 0.3 sec (the result is stored in r)  */
 auto radius_post = [](state_type &r, const state_type &, const input_type &u) {
-  double c = std::abs(u[0])*std::sqrt(std::tan(u[1])*std::tan(u[1])/4.0+1);
-  r[0] = r[0]+c*r[2]*tau;
-  r[1] = r[1]+c*r[2]*tau;
+    // manually overapproximated
+//    double c = abs(u[1]) * 1/std::cos(std::atan(tan(u[2])/2));
+//
+//  const state_type w={{.1,.1}};
+//  r[0] = r[2]*c + w[0];
+//  r[1] = r[2]*c + w[1];
+
+     //magic author's approach
+    double c = std::abs(u[0])*std::sqrt(std::tan(u[1])*std::tan(u[1])/4.0+1);
+    const state_type w={{.1,.1}};
+    r[0] = r[0]+c*r[2]*tau + w[0];
+    r[1] = r[1]+c*r[2]*tau + w[1];
 };
 
 int main() {
   /* to measure time */
   TicToc tt;
 
+    std::string path_cora = "./resources/reachability_vehicle_dist.json";
+    std::string path_compare="./resources/compare.json";
+
   /* setup the workspace of the synthesis problem and the uniform grid */
   /* lower bounds of the hyper rectangle */
-  state_type s_lb={{0,0,-3.5}};
+  state_type s_lb={{8,0,0}};
   /* upper bounds of the hyper rectangle */
-  state_type s_ub={{10,10,3.5}};
+  state_type s_ub={{10,3,1}};
   /* grid node distance diameter */
   state_type s_eta={{.2,.2,.2}};
   scots::UniformGrid ss(state_dim,s_lb,s_ub,s_eta);
@@ -81,7 +93,7 @@ int main() {
   
   /* construct grid for the input space */
   /* lower bounds of the hyper rectangle */
-  input_type i_lb={{-1,-1}};
+  input_type i_lb={{0.7,0.7}};
   /* upper bounds of the hyper rectangle */
   input_type i_ub={{ 1, 1}};
   /* grid node distance diameter */
@@ -105,7 +117,7 @@ int main() {
     { 8.4, 9.3, 5.9,  6.1},
     { 9.3, 10 , 4.7,  4.9},
     { 8.4, 9.3, 3.5,  3.7},
-    { 9.3, 10 , 2.3,  2.5}
+    { 9.3, 10 , 1.3,  1.5}
   };
 
   /* avoid function returns 1 if x is in avoid set  */
@@ -130,8 +142,12 @@ int main() {
   scots::Abstraction<state_type,input_type> abs(ss,is);
 
   tt.tic();
+    /* compute tf with scots */
   abs.compute_gb(tf,vehicle_post, radius_post, avoid);
-  //abs.compute_gb(tf,vehicle_post, radius_post);
+//    /* compute tf with cora from @path_cora */
+//    abs.compute_transitions(tf, path_cora, vehicle_post,radius_post);
+//    /* compute tf with scots and compare with cora. result in @path_compare*/
+//    abs.compute_compare_gb(tf,path_cora, path_compare, vehicle_post,radius_post);
   tt.toc();
 
   if(!getrusage(RUSAGE_SELF, &usage))
@@ -143,7 +159,7 @@ int main() {
     state_type x;
     ss.itox(idx,x);
     /* function returns 1 if cell associated with x is in target set  */
-    if (9 <= (x[0]-s_eta[0]/2.0) && (x[0]+s_eta[0]/2.0) <= 9.5 && 
+    if (9.5 <= (x[0]-s_eta[0]/2.0) && (x[0]+s_eta[0]/2.0) <= 10 &&
         0 <= (x[1]-s_eta[1]/2.0) && (x[1]+s_eta[1]/2.0) <= 0.5)
       return true;
     return false;
